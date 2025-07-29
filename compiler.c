@@ -71,10 +71,6 @@ const char *extract_block() {
         if (c == '8') depth++;
         else if (c == '9') depth--;
     }
-    if (depth != 0) {
-        fprintf(stderr, "Unbalanced brackets\n");
-        exit(1);
-    }
     size_t len = vm.pc - start - 1;
     char *block = malloc(len + 1);
     memcpy(block, vm.code + start, len);
