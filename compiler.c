@@ -7,6 +7,9 @@
 
 #define MAX_TAPE_SIZE (1024 * 1024 * 8) // Max bits: 1MB tape if needed
 #define STACK_SIZE 1024
+#define MAX_BLOCK_SIZE 4096
+
+static char block_buffer[MAX_BLOCK_SIZE];
 
 typedef struct {
     uint8_t *bits;
@@ -24,9 +27,17 @@ Tape tape = {NULL, 0, 0};
 VM vm = {0};
 
 void create_tape(size_t bytes) {
-    if (tape.bits) free(tape.bits);
-    tape.size = bytes * 8;
-    tape.bits = calloc((tape.size + 7) / 8, 1); // all bits initialized to 0
+    size_t new_size = bytes * 8;
+    if (tape.bits && new_size <= tape.size) {
+        // Reuse existing buffer
+        tape.size = new_size;
+        tape.pointer = 0;
+        set_all(false);
+        return;
+    }
+    free(tape.bits);
+    tape.size = new_size;
+    tape.bits = calloc((tape.size + 7) / 8, 1);
     tape.pointer = 0;
 }
 
@@ -41,7 +52,7 @@ void set_bit(size_t index, bool val) {
         tape.bits[index / 8] &= ~(1 << (7 - (index % 8)));
 }
 
-void set_all(uint8_t val) {
+void set_all(bool val) {
     memset(tape.bits, val ? 0xFF : 0x00, (tape.size + 7) / 8);
 }
 
@@ -62,7 +73,6 @@ size_t read_hex_bytes(int digits) {
         value = (value << 4) | hex_val(read_hex());
     return value;
 }
-
 const char *extract_block() {
     int depth = 1;
     size_t start = vm.pc;
@@ -72,14 +82,15 @@ const char *extract_block() {
         else if (c == '9') depth--;
     }
     size_t len = vm.pc - start - 1;
-    char *block = malloc(len + 1);
-    memcpy(block, vm.code + start, len);
-    block[len] = '\0';
-    return block;
+    if (len > MAX_BLOCK_SIZE) {
+        fprintf(stderr, "Block too large\n");
+        exit(1);
+    }
+    memcpy(block_buffer, vm.code + start, len);
+    block_buffer[len] = '\0';
+    return block_buffer;
 }
-
 void execute(const char *code); // forward declaration
-
 void run() {
     while (vm.code[vm.pc]) {
         char op = read_hex();
@@ -134,7 +145,6 @@ void run() {
         }
     }
 }
-
 void execute(const char *code) {
     size_t prev_pc = vm.pc;
     const char *prev_code = vm.code;
@@ -144,31 +154,23 @@ void execute(const char *code) {
     vm.code = prev_code;
     vm.pc = prev_pc;
 }
-
 int main(int argc, char **argv) {
     if (argc != 2) {
         printf("Usage: %s HEXCODE\n", argv[0]);
         return 1;
     }
-
     clock_t start = clock();
-
     vm.code = argv[1];
     vm.pc = 0;
     vm.function = NULL;
     run();
-
     clock_t end = clock();
     double duration_ms = 1000.0 * (end - start) / CLOCKS_PER_SEC;
-
-    // Optional: Print final tape (as bits)
     printf("Tape: ");
     for (size_t i = 0; i < tape.size; ++i)
         printf("%d", get_bit(i));
     printf("\n");
-
     printf("Execution time: %.3f ms\n", duration_ms);
-
     free(tape.bits);
     if (vm.function) free((void *)vm.function);
     return 0;
