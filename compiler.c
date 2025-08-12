@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <time.h>
 
-#define MAX_TAPE_SIZE (1024 * 1024 * 8) // Max bits: 1MB tape if needed
+#define MAX_TAPE_SIZE (1024 * 1024 * 8)
 #define STACK_SIZE 1024
 #define MAX_BLOCK_SIZE 4096
 
@@ -13,7 +13,7 @@ static char block_buffer[MAX_BLOCK_SIZE];
 
 typedef struct {
     uint8_t *bits;
-    size_t size;  // in bits
+    size_t size;
     size_t pointer;
 } Tape;
 
@@ -29,7 +29,6 @@ VM vm = {0};
 void create_tape(size_t bytes) {
     size_t new_size = bytes * 8;
     if (tape.bits && new_size <= tape.size) {
-        // Reuse existing buffer
         tape.size = new_size;
         tape.pointer = 0;
         set_all(false);
@@ -90,7 +89,7 @@ const char *extract_block() {
     block_buffer[len] = '\0';
     return block_buffer;
 }
-void execute(const char *code); // forward declaration
+void execute(const char *code);
 void run() {
     while (vm.code[vm.pc]) {
         char op = read_hex();
@@ -138,6 +137,7 @@ void run() {
                 if (vm.function) execute(vm.function);
                 break;
             case 'F':
+                //Note: will be used for additional commands, like tape saving or rerunning
                 return;
             default:
                 fprintf(stderr, "Unknown command: %c\n", op);
@@ -175,3 +175,4 @@ int main(int argc, char **argv) {
     if (vm.function) free((void *)vm.function);
     return 0;
 }
+
