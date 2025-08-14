@@ -28,5 +28,10 @@
     <th>Bit selection changes to the bit on the right of the currently selected bit (pointer moves right)</th>
     <th>-</th>
   </tr>
+ <tr>
+    <th>4</th>
+    <th>Flips the currently selected bit</th>
+    <th>-</th>
+  </tr>
 
 </table>
