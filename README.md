@@ -1,0 +1,21 @@
+<h1>Bitlow - a simple, turing-machine based programming language</h1>
+<h3>It uses raw binary data, in the form of hexadecimal characters, as code</h3>
+<br><br>
+<h2>Code manual</h2>
+<table>
+  <tr>
+    <th>Character</th>
+    <th>What it does</th>
+    <th>Additional args</th>
+  </tr>
+  <tr>
+    <th>0</th>
+    <th>Changes the currently selected bit to 0</th>
+    <th>-</th>
+  </tr>
+  <tr>
+    <th>1</th>
+    <th>Changes the currently selected bit to 1</th>
+    <th>-</th>
+  </tr>
+</table>
