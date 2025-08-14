@@ -18,4 +18,15 @@
     <th>Changes the currently selected bit to 1</th>
     <th>-</th>
   </tr>
+  <tr>
+    <th>2</th>
+    <th>Bit selection changes to the bit on the left of the currently selected bit (pointer moves left)</th>
+    <th>-</th>
+  </tr>
+  <tr>
+    <th>3</th>
+    <th>Bit selection changes to the bit on the right of the currently selected bit (pointer moves left)</th>
+    <th>-</th>
+  </tr>
+
 </table>
