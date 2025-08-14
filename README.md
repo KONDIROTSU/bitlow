@@ -25,7 +25,7 @@
   </tr>
   <tr>
     <th>3</th>
-    <th>Bit selection changes to the bit on the right of the currently selected bit (pointer moves left)</th>
+    <th>Bit selection changes to the bit on the right of the currently selected bit (pointer moves right)</th>
     <th>-</th>
   </tr>
 
