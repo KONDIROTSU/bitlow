@@ -72,8 +72,8 @@ char read_hex() {
 uint8_t hex_val(char c) {
     if (c >= '0' && c <= '9') return c - '0';
     if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-    fprintf(stderr, "Invalid hex character: %c\n", c);
-    exit(1);
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    return 0;
 }
 
 size_t read_hex_bytes(int digits) {
@@ -84,31 +84,79 @@ size_t read_hex_bytes(int digits) {
 }
 
 const char *extract_block() {
-    int depth = 1;
-    size_t start = vm.pc;
-    size_t orig_pc = vm.pc;
+    int depth = 1;                // we've already consumed the opening '8'
     size_t block_len = 0;
+
     while (vm.pc < vm.code_size * 2 && depth > 0) {
         char c = read_hex();
-        if (c == '8') depth++;
-        else if (c == '9') depth--;
-        if (block_len >= MAX_BLOCK_SIZE) {
+        if (c == '\0') break;
+
+        // If we encounter an A or B, we MUST treat the next 4 nibbles as a size
+        // and NOT interpret any '8'/'9' inside those 4 nibbles as braces.
+        if (c == 'A' || c == 'B') {
+            // append the A/B token
+            if (block_len + 1 >= MAX_BLOCK_SIZE) {
+                fprintf(stderr, "Block too large\n");
+                exit(1);
+            }
+            block_buffer[block_len++] = c;
+            // read and append exactly 4 size nibbles (do not treat them as braces)
+            for (int i = 0; i < 4; ++i) {
+                if (vm.pc >= vm.code_size * 2) {
+                    fprintf(stderr, "Unexpected EOF while reading size for %c\n", c);
+                    exit(1);
+                }
+                char s = read_hex();
+                if (block_len + 1 >= MAX_BLOCK_SIZE) {
+                    fprintf(stderr, "Block too large\n");
+                    exit(1);
+                }
+                block_buffer[block_len++] = s;
+            }
+            continue;
+        }
+
+        // Bracket handling: opening/closing braces inside the block should be
+        // preserved (except the final closing '9' that matches the outermost opener).
+        if (c == '8') {
+            depth++; // nested opening brace
+            if (block_len + 1 >= MAX_BLOCK_SIZE) {
+                fprintf(stderr, "Block too large\n");
+                exit(1);
+            }
+            block_buffer[block_len++] = c;
+            continue;
+        }
+
+        if (c == '9') {
+            depth--; // closing brace
+            if (depth == 0) {
+                // this '9' closes the outermost block — do NOT append it and stop.
+                break;
+            } else {
+                if (block_len + 1 >= MAX_BLOCK_SIZE) {
+                    fprintf(stderr, "Block too large\n");
+                    exit(1);
+                }
+                block_buffer[block_len++] = c;
+                continue;
+            }
+        }
+
+        // Normal content nibble -> append
+        if (block_len + 1 >= MAX_BLOCK_SIZE) {
             fprintf(stderr, "Block too large\n");
             exit(1);
-
         }
         block_buffer[block_len++] = c;
     }
+
     if (depth > 0) {
         fprintf(stderr, "Unmatched block end\n");
         exit(1);
     }
-    size_t len = block_len - 1;
-    if (len > MAX_BLOCK_SIZE) {
-        fprintf(stderr, "Block too large\n");
-        exit(1);
-    }
-    block_buffer[len] = '\0';
+
+    block_buffer[block_len] = '\0';
     return block_buffer;
 }
 
@@ -139,21 +187,19 @@ void run() {
                 } else {
                     for (size_t i = 0; i < count; ++i) execute(block);
                 }
-                //free((void *)block); -- block_buffer, don't free
                 break;
             }
             case 'C': {
                 if (read_hex() != '8') { fprintf(stderr, "Expected '{'\n"); exit(1); }
                 const char *block = extract_block();
                 if (get_bit(tape.pointer)) execute(block);
-                //free((void *)block); -- block_buffer, don't free
                 break;
             }
             case 'D': {
                 if (read_hex() != '8') { fprintf(stderr, "Expected '{'\n"); exit(1); }
                 const char *block = extract_block();
                 if (vm.function) free((void *)vm.function);
-                vm.function = strdup(block); // duplicate, we'll free later
+                vm.function = strdup(block);
                 break;
             }
             case 'E':
