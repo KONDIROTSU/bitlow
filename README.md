@@ -1,4 +1,6 @@
 <h1>Bitlow - a simple, turing-machine based programming language</h1>
+<hr>
+<h3>Code written in this programming language manipulates a "tape" of bits. Operations change the currently chosen bit, referred to as "the pointer".</h3>
 <h3>It uses raw binary data, in the form of hexadecimal characters, as code</h3>
 <br><br>
 <h2>Code manual</h2>
@@ -31,6 +33,11 @@
  <tr>
     <th>4</th>
     <th>Flips the currently selected bit</th>
+    <th>-</th>
+  </tr>
+  <tr>
+    <th>8 and 9</th>
+    <th>"{" and "}", respectively. Used to nest code inside functions.</th>
     <th>-</th>
   </tr>
 
