@@ -7,8 +7,8 @@
 <table>
   <tr>
     <th>Character</th>
-    <th>What it does</th>
-    <th>Additional args</th>
+    <th>Definition</th>
+    <th>Additional args and explanation</th>
   </tr>
   <tr>
     <th>0</th>
@@ -54,5 +54,25 @@
     <th>B</th>
     <th>Loop</th>
     <th>The next 4 nibbles (2 bytes) is how many times the loop of the code in brackets is done. If the value is 0, the loop is infinite. Example: <code>B 0010 8439</code> flips a bit and moves right 16 times.</th>
+  </tr>
+  <tr>
+    <th>C</th>
+    <th>"If" statement</th>
+    <th>If the currently select bit is "1", the code in brackets gets executed. Example: <code>C 83129</code>; if the currently selected bit is 1, the bit to the right gets changed to 1.</th>
+  </tr>
+  <tr>
+    <th>D</th>
+    <th>Function definition</th>
+    <th>Defines a function that can be called later in code. Language supports one function at one time. Function can be overwritten. Example: <code>D 8434349</code> defines a function, where the current bit and two next ones get flipped.</th>
+  </tr>
+  <tr>
+    <th>E</th>
+    <th>Executes the defined function</th>
+    <th>-</th>
+  </tr>
+  <tr>
+    <th>F</th>
+    <th>Terminates the execution of the program</th>
+    <th>-</th>
   </tr>
 </table>
